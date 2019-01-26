@@ -415,7 +415,7 @@ class PartialDependence(BaseGlobalInterpretation):
                                 n_jobs=-1, sample=True, sampling_strategy='random-choice',
                                 n_samples=1000, bin_count=50, with_variance=False,
                                 figsize=(16, 10), progressbar=True, variance_type='estimate',
-                                superimpose=True):
+                                classes_per_plot=1):
         """
         Computes partial_dependence of a set of variables. Essentially approximates
         the partial partial_dependence of the predict_fn with respect to the variables
@@ -541,7 +541,7 @@ class PartialDependence(BaseGlobalInterpretation):
 
             self.interpreter.logger.info("done computing pd, now plotting ...")
             ax = self._plot_pdp_from_df(pd_df, metadata, with_variance=with_variance,
-                                        figsize=figsize, superimpose=superimpose)
+                                        figsize=figsize)
             return ax
         else:
             ax_list = []
@@ -557,14 +557,15 @@ class PartialDependence(BaseGlobalInterpretation):
                                                           variance_type=variance_type)
 
                 self.interpreter.logger.info("done computing pd, now plotting ...")
-                ax = self._plot_pdp_from_df(pd_df, metadata, with_variance=with_variance, figsize=figsize)
+                ax = self._plot_pdp_from_df(pd_df, metadata, with_variance=with_variance,
+                                            figsize=figsize, classes_per_plot=classes_per_plot)
                 ax_list.append(ax)
             return ax_list
 
 
     def _plot_pdp_from_df(self, pdp, pd_metadata,
                           with_variance=False, plot_title=None,
-                          disable_offset=True, figsize=(16, 10), superimpose=False):
+                          disable_offset=True, figsize=(16, 10), classes_per_plot=1):
 
         feature_columns = pd_metadata['feature_columns_for_pd']
         if pd_metadata['filtered_target_names'] is None:
@@ -583,7 +584,7 @@ class PartialDependence(BaseGlobalInterpretation):
                                      plot_title=plot_title,
                                      disable_offset=disable_offset,
                                      figsize=figsize,
-                                     superimpose=superimpose)
+                                     classes_per_plot=classes_per_plot)
         elif n_features == 2:
             feature1_column, feature2_column = feature_columns
             return self._3d_pdp_plot(pdp,
@@ -603,7 +604,7 @@ class PartialDependence(BaseGlobalInterpretation):
 
     def _2d_pdp_plot(self, pdp, feature_name, sd_col, target_columns,
                      with_variance=False, plot_title=None,
-                     disable_offset=True, figsize=(16, 10), superimpose=False):
+                     disable_offset=True, figsize=(16, 10), classes_per_plot=1):
         colors = cycle(COLORS)
         figure_list, axis_list = [], []
 
@@ -611,13 +612,9 @@ class PartialDependence(BaseGlobalInterpretation):
         if len(target_columns) == 2:
             target_columns = [target_columns[-1]]
 
-        if superimpose:
-            f, ax = pyplot.subplots(1, figsize=figsize)
-            figure_list.append(f)
-            axis_list.append(ax)
 
-        for target_column in target_columns:
-            if not superimpose:
+        for (n, target_column) in enumerate(target_columns):
+            if (n % classes_per_plot) == 0:
                 f, ax = pyplot.subplots(1, figsize=figsize)
                 figure_list.append(f)
                 axis_list.append(ax)
