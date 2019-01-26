@@ -482,9 +482,8 @@ class PartialDependence(BaseGlobalInterpretation):
             if variance plotting is enabled, determines which variance to include.
             estimate: the variance of the partial dependence estimates
             prediction: the variances of the predictions at the given point
-        superimpose(bool):
-            whether to plot partial dependence all on the same axis for multiclass classification
-            (only for 2d case because superimposed 3d is a mess)
+        classes_per_plot(int):
+            number of classes to display on 2d pdp in multiclass setting
 
         Examples
         --------
@@ -557,6 +556,8 @@ class PartialDependence(BaseGlobalInterpretation):
                                                           variance_type=variance_type)
 
                 self.interpreter.logger.info("done computing pd, now plotting ...")
+                if classes_per_plot < 1:
+                    raise ValueError("Must show at least 1 class per plot")
                 ax = self._plot_pdp_from_df(pd_df, metadata, with_variance=with_variance,
                                             figsize=figsize, classes_per_plot=classes_per_plot)
                 ax_list.append(ax)
